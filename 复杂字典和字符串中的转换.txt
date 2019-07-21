@@ -1,0 +1,16 @@
+问题背景：
+python3.6中，我想用argparse.ArgumentParser传递一个字典作为参数，但是argparse.ArgumentParser只接受int，str类型，只好先把
+dict转为str然后传递过去，原来的字典是类似这样
+{"header": "content-type: application/json",  "data": {"id": 111, "texts": ["蔡徐坤打篮球厉不厉害"], "is_tokenized": false}}
+这是一个post请求的参数，其中data中的texts字段是一个list，list中的内容是query内容，query每次都要传入不同的内容，所以我想用
+str中的format来实现这个功能，所以我的问题是如何把现在这个字典转成合适的字符串格式，值得一提的是这个字典中data中的内容有些复杂，
+其中包括str, int, list of str, 还有一个false，python中False才是boolean中的一个常量，而false什么都不是，所以直接用ast.literal_eval解析
+是不可以的，因为ast中的文档说了只能解析python中的int，str，list，boolean这些
+其中尝试了很多方法，最终找到了合适的字符串格式和解析字符串为dict的函数操作
+字典对应的字符串：s = "{\"header\": \"content-type: application/json\", \"data\": \"{\\\"id\\\": 111,\\\"texts\\\": [{}], \\\"is_tokenized\\\": false}\"}"
+解析方法:
+d = json.loads(s)
+header = d["header"]
+data = ast.literal_eval(parameter["data"].format(query))
+这样data就可以作为post中的json参数传入了
+req = requests.post(url, json=data, headers=headers,verify=False)
